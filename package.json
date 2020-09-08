@@ -8,5 +8,9 @@
     "start": "node main.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "crypto-js": "^4.0.0",
+    "merkle": "^0.6.0"
+  }
 }
