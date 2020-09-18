@@ -25,7 +25,7 @@ function getLatestBlock() {
 }
 
 // 표준 암호화 알고리즘 라이브러리
-const Crypto = require("crypto-js");
+const CryptoJS = require("crypto-js");
 
 function calculateHash(version, index, previousHash, timestamp, merkleRoot) {
     return CryptoJS.SHA256(version + index + previousHash + timestamp + merkleRoot).toString().toUpperCase();
@@ -74,6 +74,16 @@ function generateNextBlock(blockData) {
     const newBlockHeader = new BlockHeader(currentVersion, nextIndex, previousHash, nextTimestamp, merkleRoot);
 
     return new Block(newBlockHeader, blockData);
+}
+
+const fs = require("fs");
+function getCurrentVersion() {
+    const packageJson = fs.readFileSync("./package.json");
+    return JSON.parse(packageJson).version;
+}
+
+function getCurrentTimestamp() {
+    return Math.round(new Date().getTime() / 1000);
 }
 
 // 개별 블록을 검증
@@ -135,4 +145,39 @@ function addBlock(newBlock) {
     }
     return true;
 }
+
+// Chapter 2
+const http_port = process.env.HTTP_PORT || 3001;
+
+const express = require("express");
+const bodyParser = require("body-parser");
+
+function initHttpServer() {
+    const app = express();
+    app.use(bodyParser.json());
+
+    app.get("/blocks", function (req, res) {
+        res.send(getBlockchain());
+    })
+    app.post("/mineBlock", function (req, res) {
+        const data = req.body.data || [];
+        const newBlock = generateNextBlock(data);
+        addBlock(newBlock);
+
+        res.send(newBlock);
+    })
+    app.get("/version", function (req, res) {
+        res.send(getCurrentVersion());
+    })
+    app.post("/stop", function (req, res) {
+        res.send({ "msg": "stopping server"});
+        process.exit();
+    })
+
+    app.listen(http_port, function () {
+        console.log("Listening http port on : " + http_port)
+    })
+}
+
+initHttpServer();
 
